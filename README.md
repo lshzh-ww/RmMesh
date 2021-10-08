@@ -16,7 +16,7 @@ Use *python ./RmMeshGUI.py* to start the script.
 
 ### Load Data
 
-All ARPES scan images should be stored as a 3D matrix in a MATLAB data file. The matrix should be of the form data(index,row,column), where the index labeled different images and (row,column) labeled a certain pixel in that image.
+All ARPES scan images should be stored as a 3D matrix in a MATLAB data file. The matrix should be of the form data(index,row,column), where the index labels different images and (row,column) labels a certain pixel in that image.
 
 Right-click the color bar to change the color mapping.
 
