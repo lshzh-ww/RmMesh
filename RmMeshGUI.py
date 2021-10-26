@@ -3,7 +3,7 @@ import colorMap
 import CustomWidgets.plot
 import CompFunc.fft
 import threading
-from multiprocessing import Pool
+from multiprocessing import Pool,cpu_count
 
 import sys
 import numpy as np
@@ -373,6 +373,8 @@ class MyWindow(QMainWindow):
         self.rightGraphWidget.setImage(self.absFftData)
 
     def testFunc(self):
+        CPU_NUM=cpu_count()
+        
         timeStart=time()
         blockSize=48
         
@@ -386,14 +388,14 @@ class MyWindow(QMainWindow):
         self.optimizedMeshArray=np.zeros(self.smallImageArray.shape)
         self.optimizedMeshLoss=np.zeros(M*N)
 
-        with Pool(processes=4) as pool:
+        with Pool(processes=CPU_NUM) as pool:
             index=0
-            while (index+4)<M*N:
-                m_Results=[pool.apply_async(CompFunc.fft.optimizeMeshFromData,args=(self.smallImageArray[i],self.avgScanImageArray[i],)) for i in range(index,index+4)]
-                for i in range(4):
+            while (index+CPU_NUM)<M*N:
+                m_Results=[pool.apply_async(CompFunc.fft.optimizeMeshFromData,args=(self.smallImageArray[i],self.avgScanImageArray[i],)) for i in range(index,index+CPU_NUM)]
+                for i in range(CPU_NUM):
                     self.optimizedMeshArray[index+i],self.optimizedMeshLoss[index+i]=m_Results[i].get()
                     print(str(index+i+1)+'/'+str(M*N))
-                index+=4
+                index+=CPU_NUM
             m_Results=[pool.apply_async(CompFunc.fft.optimizeMeshFromData,args=(self.smallImageArray[i],self.avgScanImageArray[i],)) for i in range(index,M*N)]
             for i in range(len(m_Results)):
                 self.optimizedMeshArray[index+i],self.optimizedMeshLoss[index+i]=m_Results[i].get()
