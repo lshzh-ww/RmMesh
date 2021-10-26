@@ -1,4 +1,5 @@
 
+from contextlib import nullcontext
 from os import XATTR_REPLACE
 import numpy as np
 from math import log, sqrt,sin,cos,pi,exp,atan,isinf,isnan
@@ -218,12 +219,18 @@ def meshLoss(fourierPoints_compressed_with_XyPos,allPara):
 
 
     standardMesh=allPara[0]
+    rawImage=allPara[1]
     
     xLen=len(standardMesh)
     yLen=len(standardMesh[0])
     recreatedMesh=createMeshFromPeaks(fourierPoints_compressed,XYPoses,xLen,yLen)
-    
-    sum=normalizedAndProduct(recreatedMesh,standardMesh)
+    recreatedMesh=recreatedMesh*rawImage
+    sum=(np.sum(recreatedMesh*recreatedMesh)**0.5)
+    if sum!=0:
+        recreatedMesh=recreatedMesh/sum
+
+    sum=np.sum(recreatedMesh*standardMesh)
+    #sum=normalizedAndProduct(recreatedMesh,standardMesh)
     loss=1.-sum
     #print(loss)
     return loss
@@ -261,7 +268,8 @@ def meshLoss3(fourierPoints_compressed_with_XyPos,allPara):
 
     for i in range(int(XYPoses[0])-2,int(XYPoses[0])+3):
         for j in range(int(XYPoses[1])-2,int(XYPoses[1])+3):
-            sum+=abs(inputdata[M+i,N+j])
+            if(M+i<len(inputdata) and M+i>-1 and N+j<len(inputdata[0]) and N+j>-1 and i*j!=0):
+                sum+=abs(inputdata[M+i,N+j])
     
     #for i in range(int(XYPoses[2])-2,int(XYPoses[2])+3):
     #    sum+=abs(inputdata[M+i,N+int(XYPoses[3])])
@@ -271,7 +279,8 @@ def meshLoss3(fourierPoints_compressed_with_XyPos,allPara):
 
     for i in range(int(XYPoses[2])-2,int(XYPoses[2])+3):
         for j in range(int(XYPoses[3])-2,int(XYPoses[3])+3):
-            sum+=abs(inputdata[M+i,N+j])
+            if(M+i<len(inputdata) and M+i>-1 and N+j<len(inputdata[0]) and N+j>-1 and i*j!=0):
+                sum+=abs(inputdata[M+i,N+j])
     
 
     
@@ -453,11 +462,12 @@ def optimizeMeshFromData(meshData,rawImage):
 
     sum=0.
     standardMesh=meshData.copy()
-    for i in range(len(meshData)):
-        for j in range(len(meshData[0])):
-            sum+=standardMesh[i,j]**2
+    #for i in range(len(meshData)):
+    #    for j in range(len(meshData[0])):
+    #        sum+=standardMesh[i,j]**2
+    standardMesh=standardMesh*rawImage
+    sum=np.sum(standardMesh*standardMesh)**0.5
     if(sum>0.):
-        sum=sum**0.5
         standardMesh/=sum  
 
         peaks=np.zeros((3,2),dtype=np.int)
@@ -487,22 +497,22 @@ def optimizeMeshFromData(meshData,rawImage):
         recreatedMesh=np.zeros(meshData.shape,dtype=np.complex)
         optimized_para=recreateMeshFft(fftData,recreatedMesh,genHigherPeaks(peaks))
 
-        standardMesh3D=np.zeros((1,len(standardMesh),len(standardMesh[0])))
-        standardMesh3D[0]=rawImage
+        #standardMesh3D=np.zeros((1,len(standardMesh),len(standardMesh[0])))
+        #standardMesh3D[0]=rawImage
         #print('start value',meshLoss3(optimized_para,standardMesh3D))
 
-        simplexMethod(meshLoss,1.2,optimized_para,14,16,standardMesh)
-        simplexMethod(meshLoss,0.2,optimized_para,16,20,standardMesh)
-        simplexMethod(meshLoss,1.01,optimized_para,26,30,standardMesh)
-        simplexMethod(meshLoss,1.05,optimized_para,14,16,standardMesh)
-        simplexMethod(meshLoss,2.0,optimized_para,1,3,standardMesh)
+        simplexMethod(meshLoss,1.2,optimized_para,14,16,standardMesh,rawImage)
+        simplexMethod(meshLoss,0.2,optimized_para,16,20,standardMesh,rawImage)
+        simplexMethod(meshLoss,1.01,optimized_para,26,30,standardMesh,rawImage)
+        simplexMethod(meshLoss,1.05,optimized_para,14,16,standardMesh,rawImage)
+        simplexMethod(meshLoss,2.0,optimized_para,1,3,standardMesh,rawImage)
         
         
         #simplexMethod(meshLoss,2.0,optimized_para,16,20,standardMesh)
         #simplexMethod(meshLoss,2.0,optimized_para,3,7,standardMesh)
         
 
-        simplexMethod(meshLoss,1.001,optimized_para,26,30,standardMesh)
+        simplexMethod(meshLoss,1.001,optimized_para,26,30,standardMesh,rawImage)
         #simplexMethod(meshLoss,1.2,optimized_para,3,7,standardMesh)
         simplexMethod(meshLoss3,1.2,optimized_para,1,3,rawImage)
         simplexMethod(meshLoss3,1.2,optimized_para,14,16,rawImage)
@@ -521,7 +531,9 @@ def optimizeMeshFromData(meshData,rawImage):
         #print(atan(optimized_para[26]/optimized_para[27]),atan(optimized_para[28]/optimized_para[29]))
 
         recreatedMesh=createMeshFromPeaks(optimized_para[:len(optimized_para)-4],optimized_para[len(optimized_para)-4:],len(meshData),len(meshData[0]))
-        recreatedMesh=recreatedMesh*np.mean(meshData)/np.mean(recreatedMesh)
+        recreatedMesh=recreatedMesh*np.mean(rawImage)/np.mean(recreatedMesh*rawImage)
+        #recreatedMesh=recreatedMesh*np.mean(standardMesh*rawImage)/np.mean(recreatedMesh*rawImage)
+        #recreatedMesh=recreatedMesh*np.mean(meshData)/np.mean(recreatedMesh)
         return recreatedMesh,lossValues
     else:
         return meshData,1000000

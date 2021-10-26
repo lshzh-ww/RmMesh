@@ -7,7 +7,7 @@ from multiprocessing import Pool
 
 import sys
 import numpy as np
-from math import log
+from math import log,isnan
 import scipy as sp
 import pyqtgraph as pg
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QFileDialog, QWidget, QInputDialog, QHBoxLayout, QFrame, QSplitter, QPushButton, QGridLayout
@@ -49,6 +49,10 @@ class MyWindow(QMainWindow):
         testAct=QAction(QIcon(),'Optimize mesh template',self)
         testAct.triggered.connect(self.testFunc)
 
+        #crop data
+        cropDataAct=QAction(QIcon(),'Crop data',self)
+        cropDataAct.triggered.connect(self.cropData)
+
         #set menu style
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&File')
@@ -59,6 +63,7 @@ class MyWindow(QMainWindow):
         dataMenu.addAction(switchXY)
         dataMenu.addAction(restoreCurveAct)
         dataMenu.addAction(testAct)
+        dataMenu.addAction(cropDataAct)
         menubar.setNativeMenuBar(False)
         
         #set layout
@@ -175,6 +180,21 @@ class MyWindow(QMainWindow):
         for i in np.arange(0,np.size(self.rawData,0),1):
             self.rawIntensity[i]=np.mean(self.rawData[i])
     
+    def cropData(self):
+        text, ok = QInputDialog.getText(self, 'Data Range','Xmin,Xmax,Ymin,Ymax')
+        paraList=text.split(',')
+        self.rawData=self.rawData[:,int(paraList[0]):int(paraList[1]),int(paraList[2]):int(paraList[3])]
+        dataShape=np.shape(self.rawData)
+        print(dataShape)
+        self.displayData=self.rawData.copy()
+        self.leftGraphWidget.setImage(self.displayData)
+        self.fftData=CompFunc.fft.dataToFft(self.displayData)
+        self.absFftData=CompFunc.fft.fftToAbs(self.fftData)
+        self.rightGraphWidget.setImage(self.absFftData)
+        self.rawIntensity=np.zeros(np.size(self.rawData,0))
+        for i in np.arange(0,np.size(self.rawData,0),1):
+            self.rawIntensity[i]=np.mean(self.rawData[i])
+
     def saveFileDiag(self):
         home_dir = str(Path.home())
         saveFilename = QFileDialog.getSaveFileName(self, 'Save File', home_dir)
@@ -212,6 +232,12 @@ class MyWindow(QMainWindow):
         self.leftUndoButton.setEnabled(True)
         self.avgRawData=np.zeros((1,np.shape(self.rawData[0])[0],np.shape(self.rawData[0])[1]))
         for i in np.arange(0,np.size(self.rawData,0),1):
+            if isnan(np.sum(self.rawData[i])):
+                print('image ' + str(i+1)+" contains NaN.")
+                for index_1 in range(np.size(self.rawData,1)):
+                    for index_2 in range(np.size(self.rawData,2)):
+                        if isnan(self.rawData[i,index_1,index_2]):
+                            self.rawData[i,index_1,index_2]=0
             self.avgRawData[0] = self.avgRawData[0] + self.rawData[i]
         self.avgRawData = self.avgRawData/np.size(self.rawData,0)
         self.leftGraphWidget.setImage(self.avgRawData)
@@ -348,10 +374,10 @@ class MyWindow(QMainWindow):
 
     def testFunc(self):
         timeStart=time()
-        blockSize=40
+        blockSize=48
         
-        M=len(self.meshPattern[0])*2//blockSize
-        N=len(self.meshPattern[0][0])*2//blockSize
+        M=len(self.meshPattern[0])*4//blockSize
+        N=len(self.meshPattern[0][0])*4//blockSize
         print(str(M)+'by'+str(N))
 
         self.displayData=np.zeros((self.displayData.shape))
@@ -366,7 +392,7 @@ class MyWindow(QMainWindow):
                 m_Results=[pool.apply_async(CompFunc.fft.optimizeMeshFromData,args=(self.smallImageArray[i],self.avgScanImageArray[i],)) for i in range(index,index+4)]
                 for i in range(4):
                     self.optimizedMeshArray[index+i],self.optimizedMeshLoss[index+i]=m_Results[i].get()
-                    print(str(index+i)+'/'+str(M*N))
+                    print(str(index+i+1)+'/'+str(M*N))
                 index+=4
             m_Results=[pool.apply_async(CompFunc.fft.optimizeMeshFromData,args=(self.smallImageArray[i],self.avgScanImageArray[i],)) for i in range(index,M*N)]
             for i in range(len(m_Results)):
@@ -377,7 +403,8 @@ class MyWindow(QMainWindow):
         pool.close()
         pool.join()
 
-        self.meshPattern[0]=CompFunc.fft.constructLargeImage(self.optimizedMeshArray,self.optimizedMeshLoss,M,N,blockSize,len(self.rawData[0]),len(self.rawData[0][0]))
+
+        self.meshPattern[0]=CompFunc.fft.constructLargeImage(self.optimizedMeshArray,1./self.optimizedMeshLoss,M,N,blockSize,len(self.rawData[0]),len(self.rawData[0][0]))
         self.displayData=self.meshPattern
         
         self.leftGraphWidget.setImage(self.displayData)
