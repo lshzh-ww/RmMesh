@@ -1,6 +1,3 @@
-
-from contextlib import nullcontext
-from os import XATTR_REPLACE
 import numpy as np
 from math import log, sqrt,sin,cos,pi,exp,atan,isinf,isnan
 import scipy.fft
@@ -609,8 +606,8 @@ def getRatio(rawData,reconstructData):
             for k in range(len(rawData[0,0])):
                 if rawData[i,j,k]!=0:
                     ratioData[i,j,k]=reconstructData[i,j,k]/rawData[i,j,k]
-                    if ratioData[i,j,k] > 3.:
-                        ratioData[i,j,k]=0.
+                    if ratioData[i,j,k] > 4.:
+                        ratioData[i,j,k]=4.
     return ratioData
 
 def createMeshArray(rawImage,M,N,blockSize):

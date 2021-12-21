@@ -1,8 +1,7 @@
 import FileIO.loadData
-import colorMap
 import CustomWidgets.plot
 import CompFunc.fft
-import threading
+from math import log, sqrt,sin,cos,pi,exp,atan,isinf,isnan
 from multiprocessing import Pool,cpu_count
 
 import sys
@@ -232,6 +231,12 @@ class MyWindow(QMainWindow):
         self.leftUndoButton.setEnabled(True)
         self.avgRawData=np.zeros((1,np.shape(self.rawData[0])[0],np.shape(self.rawData[0])[1]))
         for i in np.arange(0,np.size(self.rawData,0),1):
+            if np.sum(self.rawData[i])<0:
+                print('image ' + str(i+1)+" contains negative pixels.")
+                for index_1 in range(np.size(self.rawData,1)):
+                    for index_2 in range(np.size(self.rawData,2)):
+                        if self.rawData[i,index_1,index_2]<0:
+                            self.rawData[i,index_1,index_2]=0
             if isnan(np.sum(self.rawData[i])):
                 print('image ' + str(i+1)+" contains NaN.")
                 for index_1 in range(np.size(self.rawData,1)):
@@ -378,8 +383,8 @@ class MyWindow(QMainWindow):
         timeStart=time()
         blockSize=48
         
-        M=len(self.meshPattern[0])*4//blockSize
-        N=len(self.meshPattern[0][0])*4//blockSize
+        M=len(self.meshPattern[0])*12//blockSize
+        N=len(self.meshPattern[0][0])*12//blockSize
         print(str(M)+'by'+str(N))
 
         self.displayData=np.zeros((self.displayData.shape))
