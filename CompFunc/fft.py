@@ -430,22 +430,19 @@ def recreateMeshFft(fftData,meshPattern,paraList):
 def findPeakPos(data,peaksArray):
     firstValue=0.
     secondValue=0.
-    for i in range(len(data)//2+1,len(data)):
-        for j in range(len(data[0])//2+1,len(data[0])):
+    for i in range(int(len(data)/1.8),len(data)):
+        for j in range(int(len(data[0])/1.8),len(data[0])):
             if(data[i,j]>firstValue):
                 peaksArray[1,0]=i
                 peaksArray[1,1]=j
                 firstValue=data[i,j]
     
-    for i in range(len(data)//2):
-        for j in range(len(data[0])//2+1,len(data[0])):
+    for i in range(int(len(data)/2.2)):
+        for j in range(int(len(data[0])/1.8),len(data[0])):
             if(data[i,j]>secondValue):
                 peaksArray[2,0]=i
                 peaksArray[2,1]=j
                 secondValue=data[i,j]
-
-
-    
 
     if (firstValue==0):
         peaksArray[1,0]=len(data)//2
@@ -453,6 +450,39 @@ def findPeakPos(data,peaksArray):
         peaksArray[2,0]=len(data)//2
         peaksArray[2,1]=len(data)//2
 
+def autoRemoveFourierPeaks(image):
+    imageInt=np.sum(image)
+    M=len(image)//2
+    N=len(image[0])//2
+    peaks=np.zeros((3,2),dtype=np.int)
+    peaks[0,0]=M
+    peaks[0,1]=N
+    fftData=np.roll(np.roll(scipy.fft.fft2(image),M,axis=0),N,axis=1)
+    absFftData=fftToAbs(fftData)
+    findPeakPos(absFftData,peaks)
+    peaks=genHigherPeaks(peaks)
+    for peak_index in range(1,9):
+        x_center=peaks[peak_index,0]
+        y_center=peaks[peak_index,1]
+        for delta_x in range(3,20):
+            if np.sum(absFftData[x_center+delta_x,y_center-7:y_center+8])+np.sum(absFftData[x_center-delta_x,y_center-7:y_center+8])<absFftData[x_center,y_center]:
+                break
+        for delta_y in range(3,20):
+            if np.sum(absFftData[x_center-7:x_center+8,y_center+delta_y])+np.sum(absFftData[x_center-7:x_center+8,y_center-delta_y])<absFftData[x_center,y_center]:
+                break        
+        fftData=np.resize(fftData,(1,len(fftData),len(fftData[0])))
+        print(peaks[peak_index],delta_x,delta_y,peak_index)
+        maskFftData(fftData,[[x_center-delta_x,x_center+delta_x],[y_center-delta_y,y_center+delta_y]])
+        fftData=fftData[0]
+
+        #absFftData=np.resize(absFftData,(1,len(fftData),len(fftData[0])))
+        #drawRect(absFftData,[[x_center-delta_x,x_center+delta_x],[y_center-delta_y,y_center+delta_y]])
+        #absFftData=absFftData[0]
+    
+    #return absFftData
+    newImage=abs(np.flipud(np.fliplr(scipy.fft.fft2(fftData))))
+    newImage*=imageInt/np.sum(newImage)
+    return newImage
 
 
 def optimizeMeshFromData(meshData,rawImage):
@@ -580,7 +610,7 @@ def constructLargeImage(imageArray,imageWeight,M,N,size,xLen,yLen):
 def maskFftData(fftData,paraList=[]):
     xRange=[0,0]
     yRange=[0,0]
-    
+
     xRange[0]=int(paraList[0][0])
     xRange[1]=int(paraList[0][1])
     yRange[0]=int(paraList[1][0])

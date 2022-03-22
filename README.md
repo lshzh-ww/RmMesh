@@ -36,4 +36,4 @@ Use **Finish** to apply the mesh pattern to all the images.
 
 ### Advanced methods
 
-After clicking **Mesh Pattern**, use **Data->Optimize mesh template** menu to improve the quality of the mesh pattern.
+After clicking **Mesh Pattern**, use **Data->Optimize mesh template** menu to improve the quality of the mesh pattern. 

@@ -8,8 +8,9 @@ import sys
 import numpy as np
 from math import log,isnan
 import scipy as sp
+import scipy.fft
 import pyqtgraph as pg
-from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QFileDialog, QWidget, QInputDialog, QHBoxLayout, QFrame, QSplitter, QPushButton, QGridLayout
+from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QFileDialog, QWidget, QInputDialog, QHBoxLayout, QFrame, QSplitter, QPushButton, QGridLayout, QCheckBox
 from PyQt5.QtGui import QIcon, QPainter, QColor, QFont, QPixmap, QImage
 from PyQt5.QtCore import Qt, QPoint
 from pathlib import Path
@@ -103,6 +104,7 @@ class MyWindow(QMainWindow):
         self.leftUndoButton=QPushButton('Undo')
         self.leftFinishButton=QPushButton('Finish')
         self.leftMeshPattern=QPushButton('Mesh Pattern')
+        self.leftConfCheckBox=QCheckBox('Use same mesh pattern for all images')
 
         leftGrid=QGridLayout()
         leftGrid.setSpacing(10)
@@ -111,7 +113,8 @@ class MyWindow(QMainWindow):
         leftGrid.addWidget(self.leftSelectPeakButton,2,2)
         leftGrid.addWidget(self.leftUndoButton,2,3)
         leftGrid.addWidget(self.leftFinishButton,3,4)
-        
+        leftGrid.addWidget(self.leftConfCheckBox,3,1)
+        self.leftConfCheckBox.setChecked(True)
         bottomLeft.setLayout(leftGrid)
         
         self.rightFixCurveButton=QPushButton('Fix Curvature')
@@ -167,7 +170,7 @@ class MyWindow(QMainWindow):
         home_dir = str(Path.home())
         self.fname = QFileDialog.getOpenFileName(self, 'Open file', home_dir)
         #self.rawData=FileIO.loadData.loadSpacialScan(self,self.fname[0])
-        self.rawData=FileIO.loadData.matFile(self,self.fname[0])
+        self.rawData=FileIO.loadData.loadFile(self,self.fname[0])
         dataShape=np.shape(self.rawData)
         print(dataShape)
         self.displayData=self.rawData.copy()
@@ -198,7 +201,7 @@ class MyWindow(QMainWindow):
         home_dir = str(Path.home())
         saveFilename = QFileDialog.getSaveFileName(self, 'Save File', home_dir)
         print(saveFilename)
-        FileIO.loadData.saveMatFile(self, self.fname[0], saveFilename[0],self.displayData)
+        FileIO.loadData.saveFile(self, self.fname[0], saveFilename[0],self.displayData)
 
     def switchXYFunc(self):
         self.rawData=np.swapaxes(self.rawData,1,2)
@@ -225,32 +228,80 @@ class MyWindow(QMainWindow):
 
 
     def startRemoveMesh(self):
-        self.status='RemoveMesh'
-        self.selectedRegion=[]
-        self.leftSelectPeakButton.setEnabled(True)
-        self.leftUndoButton.setEnabled(True)
-        self.avgRawData=np.zeros((1,np.shape(self.rawData[0])[0],np.shape(self.rawData[0])[1]))
-        for i in np.arange(0,np.size(self.rawData,0),1):
-            if np.sum(self.rawData[i])<0:
-                print('image ' + str(i+1)+" contains negative pixels.")
-                for index_1 in range(np.size(self.rawData,1)):
-                    for index_2 in range(np.size(self.rawData,2)):
-                        if self.rawData[i,index_1,index_2]<0:
-                            self.rawData[i,index_1,index_2]=0
-            if isnan(np.sum(self.rawData[i])):
-                print('image ' + str(i+1)+" contains NaN.")
-                for index_1 in range(np.size(self.rawData,1)):
-                    for index_2 in range(np.size(self.rawData,2)):
-                        if isnan(self.rawData[i,index_1,index_2]):
-                            self.rawData[i,index_1,index_2]=0
-            self.avgRawData[0] = self.avgRawData[0] + self.rawData[i]
-        self.avgRawData = self.avgRawData/np.size(self.rawData,0)
-        self.leftGraphWidget.setImage(self.avgRawData)
-        self.fftData=CompFunc.fft.dataToFft(self.avgRawData)
-        self.absFftData=CompFunc.fft.fftToAbs(self.fftData)
-        self.rightGraphWidget.setImage(self.absFftData)
-        self.rightGraphWidget.view.getViewBox().setMouseMode(pg.ViewBox.RectMode)
-        print(self.rightGraphWidget.view.getViewBox().viewRange())
+        if self.leftConfCheckBox.isChecked():
+            self.leftConfCheckBox.setEnabled(False)
+            self.status='RemoveMesh'
+            self.selectedRegion=[]
+            self.leftSelectPeakButton.setEnabled(True)
+            self.leftUndoButton.setEnabled(True)
+            self.avgRawData=np.zeros((1,np.shape(self.rawData[0])[0],np.shape(self.rawData[0])[1]))
+            for i in np.arange(0,np.size(self.rawData,0),1):
+                if np.sum(self.rawData[i])<0:
+                    print('image ' + str(i+1)+" contains negative pixels.")
+                    for index_1 in range(np.size(self.rawData,1)):
+                        for index_2 in range(np.size(self.rawData,2)):
+                            if self.rawData[i,index_1,index_2]<0:
+                                self.rawData[i,index_1,index_2]=0
+                if isnan(np.sum(self.rawData[i])):
+                    print('image ' + str(i+1)+" contains NaN.")
+                    for index_1 in range(np.size(self.rawData,1)):
+                        for index_2 in range(np.size(self.rawData,2)):
+                            if isnan(self.rawData[i,index_1,index_2]):
+                                self.rawData[i,index_1,index_2]=0
+                self.avgRawData[0] = self.avgRawData[0] + self.rawData[i]
+            self.avgRawData = self.avgRawData/np.size(self.rawData,0)
+            self.leftGraphWidget.setImage(self.avgRawData)
+            self.fftData=CompFunc.fft.dataToFft(self.avgRawData)
+            self.absFftData=CompFunc.fft.fftToAbs(self.fftData)
+            self.rightGraphWidget.setImage(self.absFftData)
+            self.rightGraphWidget.view.getViewBox().setMouseMode(pg.ViewBox.RectMode)
+            print(self.rightGraphWidget.view.getViewBox().viewRange())
+        else:
+            timeStart=time()
+            blockSize=64
+            CPU_NUM=cpu_count()
+            self.displayData=np.zeros((self.displayData.shape))
+            for image_index in range(len(self.rawData)):
+                newImage=CompFunc.fft.autoRemoveFourierPeaks(self.rawData[image_index])
+                #newImage=CompFunc.fft.autoRemoveFourierPeaks(newImage)
+                self.meshPattern=CompFunc.fft.getRatio(self.rawData[image_index:image_index+1,:,:],np.reshape(newImage,(1,len(newImage),len(newImage[0]))))
+                
+                M=int(len(self.meshPattern[0])*4//blockSize)
+                N=int(len(self.meshPattern[0][0])*4//blockSize)
+                print(str(M)+'by'+str(N))
+
+                self.smallImageArray=CompFunc.fft.splitLargeImage(self.meshPattern[0],M,N,blockSize)
+                self.avgScanImageArray=CompFunc.fft.splitLargeImage(self.rawData[image_index],M,N,blockSize)
+                self.optimizedMeshArray=np.zeros(self.smallImageArray.shape)
+                self.optimizedMeshLoss=np.zeros(M*N)
+                if __name__ == '__main__':
+                    with Pool(processes=CPU_NUM) as pool:
+                        index=0
+                        while (index+CPU_NUM)<M*N:
+                            m_Results=[pool.apply_async(CompFunc.fft.optimizeMeshFromData,args=(self.smallImageArray[i],self.avgScanImageArray[i],)) for i in range(index,index+CPU_NUM)]
+                            for i in range(CPU_NUM):
+                                self.optimizedMeshArray[index+i],self.optimizedMeshLoss[index+i]=m_Results[i].get()
+                                print(str(index+i+1)+'/'+str(M*N))
+                            index+=CPU_NUM
+                        m_Results=[pool.apply_async(CompFunc.fft.optimizeMeshFromData,args=(self.smallImageArray[i],self.avgScanImageArray[i],)) for i in range(index,M*N)]
+                        for i in range(len(m_Results)):
+                            self.optimizedMeshArray[index+i],self.optimizedMeshLoss[index+i]=m_Results[i].get()
+                            print(str(index+i+1)+'/'+str(M*N))
+                        
+                    
+                    pool.close()
+                    pool.join()
+
+
+                self.meshPattern[0]=CompFunc.fft.constructLargeImage(self.optimizedMeshArray,1./self.optimizedMeshLoss,M,N,blockSize,len(self.rawData[0]),len(self.rawData[0][0]))
+                self.displayData[image_index]=self.meshPattern[0]*self.rawData[image_index]
+            print(time()-timeStart)
+
+            self.leftGraphWidget.setImage(self.displayData)
+            self.fftData=CompFunc.fft.dataToFft(self.displayData)
+            self.absFftData=CompFunc.fft.fftToAbs(self.fftData)
+            self.rightGraphWidget.setImage(self.absFftData)
+            return 0
 
     def leftSelectedRegion(self):
         self.leftDisplay='ReconstructData'
@@ -378,13 +429,13 @@ class MyWindow(QMainWindow):
         self.rightGraphWidget.setImage(self.absFftData)
 
     def testFunc(self):
-        CPU_NUM=cpu_count()
+        CPU_NUM=cpu_count()-2
         
         timeStart=time()
-        blockSize=48
+        blockSize=64
         
-        M=len(self.meshPattern[0])*12//blockSize
-        N=len(self.meshPattern[0][0])*12//blockSize
+        M=int(len(self.meshPattern[0])*1.2//blockSize)
+        N=int(len(self.meshPattern[0][0])*1.2//blockSize)
         print(str(M)+'by'+str(N))
 
         self.displayData=np.zeros((self.displayData.shape))
