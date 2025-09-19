@@ -5,7 +5,7 @@ from numba import jit
 
 
 def dataToFft(inputdata):
-    fftData = np.zeros(np.shape(inputdata), dtype=np.complex)
+    fftData = np.zeros(np.shape(inputdata), dtype=complex)
     M = len(inputdata[0]) // 2
     N = len(inputdata[0][0]) // 2
     for i in np.arange(0, np.size(inputdata, 0), 1):
@@ -20,7 +20,7 @@ def fftToAbs(fftData):
 
 
 def fftToData(fftData, rawIntensity):
-    reconstructData = np.zeros(np.shape(fftData), dtype=np.complex)
+    reconstructData = np.zeros(np.shape(fftData), dtype=complex)
     for i in np.arange(0, np.size(fftData, 0), 1):
         reconstructData[i] = np.flipud(np.fliplr(scipy.fft.fft2(fftData[i])))
     reconstructData = np.abs(reconstructData)
@@ -56,7 +56,7 @@ def angles2complex(normalArray):
 
 
 def genHigherPeaks(firstOrder):
-    peaks = np.zeros((25, 2), dtype=np.int)
+    peaks = np.zeros((25, 2), dtype=int)
     peaks[0] = firstOrder[0]
     peaks[1] = firstOrder[1]
     peaks[2] = firstOrder[2]
@@ -428,7 +428,7 @@ def recreateMeshFft(fftData, meshPattern, paraList):
     N = len(fftData[0]) // 2
     # xLen, yLen = len(fftData), len(fftData[0])
     XyPos = np.zeros((len(paraList), 2))
-    sum_expanded = np.zeros(len(paraList), dtype=np.complex)
+    sum_expanded = np.zeros(len(paraList), dtype=complex)
     for i in range(len(paraList)):
         sum = 0.0 + 0.0j
         weight = 0.0
@@ -516,7 +516,7 @@ def autoRemoveFourierPeaks(image):
     imageInt = np.sum(image)
     M = len(image) // 2
     N = len(image[0]) // 2
-    peaks = np.zeros((3, 2), dtype=np.int)
+    peaks = np.zeros((3, 2), dtype=int)
     peaks[0, 0] = M
     peaks[0, 1] = N
     fftData = np.roll(np.roll(scipy.fft.fft2(image), M, axis=0), N, axis=1)
@@ -572,7 +572,7 @@ def optimizeMeshFromData(meshData, rawImage):
     if sum > 0.0:
         standardMesh /= sum
 
-        peaks = np.zeros((3, 2), dtype=np.int)
+        peaks = np.zeros((3, 2), dtype=int)
         # peaks[0,0]=50
         # peaks[0,1]=50
         # peaks[1,0]=57
@@ -596,7 +596,7 @@ def optimizeMeshFromData(meshData, rawImage):
         findPeakPos(abs(fftData), peaks)
         # print(peaks)
 
-        recreatedMesh = np.zeros(meshData.shape, dtype=np.complex)
+        recreatedMesh = np.zeros(meshData.shape, dtype=complex)
         optimized_para = recreateMeshFft(fftData, recreatedMesh, genHigherPeaks(peaks))
 
         # standardMesh3D=np.zeros((1,len(standardMesh),len(standardMesh[0])))
@@ -741,7 +741,7 @@ def createMeshArray(rawImage, M, N, blockSize):
         smallfftData = np.roll(
             np.roll(smallfftData, blockSize // 2, axis=0), blockSize // 2, axis=1
         )
-        peaks = np.zeros((3, 2), dtype=np.int)
+        peaks = np.zeros((3, 2), dtype=int)
         findPeakPos(abs(smallfftData), peaks)
         peaks = genHigherPeaks(peaks)
 
