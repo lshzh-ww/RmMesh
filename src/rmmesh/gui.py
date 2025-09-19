@@ -576,4 +576,5 @@ class MyWindow(QMainWindow):
 def main():
     app = QApplication(sys.argv)
     window = MyWindow()
-    sys.exit(app.exec_())
+    window.show()
+    app.exec()

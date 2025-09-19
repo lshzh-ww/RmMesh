@@ -192,8 +192,6 @@ def createMeshFromPeaks(inputArray, XYPos_1st, xLen, yLen):
     fourierPoints[23] = fourierPoints_compressed[11].conjugate()
     fourierPoints[24] = fourierPoints_compressed[12].conjugate()
 
-    num = len(fourierPoints)
-    # num=13
     recreatedMesh = np.zeros((xLen, yLen))
     for index in (0, 1, 2, 5, 6, 7, 8):
         for m in range(xLen):
@@ -428,8 +426,7 @@ def meshLoss2(fourierPoints_compressed_with_XyPos, allPara):
 def recreateMeshFft(fftData, meshPattern, paraList):
     M = len(fftData) // 2
     N = len(fftData[0]) // 2
-    xLen = len(fftData)
-    yLen = len(fftData[0])
+    # xLen, yLen = len(fftData), len(fftData[0])
     XyPos = np.zeros((len(paraList), 2))
     sum_expanded = np.zeros(len(paraList), dtype=np.complex)
     for i in range(len(paraList)):
