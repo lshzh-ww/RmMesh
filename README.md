@@ -15,7 +15,19 @@ Python 3 packages:
 
 ## Usage
 
-Use *python ./RmMeshGUI.py* to start the script.
+First, install [uv](https://docs.astral.sh/uv/getting-started/installation/) if you don't have it.
+
+Then, clone this repository and create a virtual environment with the required packages:
+
+```bash
+uv sync --extra pyqt # or pyside
+```
+
+Finally, run the GUI:
+
+```bash
+uv run rmmesh
+```
 
 ### Load Data
 
