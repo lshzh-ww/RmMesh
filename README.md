@@ -3,8 +3,11 @@
 ![RmMesh GUI](gui.png)
 
 ## Requirements
+
 Python 3 packages:
-- PyQt5
+
+- qtpy
+- A Qt binding, e.g. PyQt5, PyQt6, PySide2, PySide6
 - pyqtgraph
 - scipy
 - numpy
@@ -12,7 +15,19 @@ Python 3 packages:
 
 ## Usage
 
-Use *python ./RmMeshGUI.py* to start the script.
+First, install [uv](https://docs.astral.sh/uv/getting-started/installation/) if you don't have it.
+
+Then, clone this repository and create a virtual environment with the required packages:
+
+```bash
+uv sync --extra pyqt # or pyside
+```
+
+Finally, run the GUI:
+
+```bash
+uv run rmmesh
+```
 
 ### Load Data
 
@@ -36,4 +51,4 @@ Use **Finish** to apply the mesh pattern to all the images.
 
 ### Advanced methods
 
-After clicking **Mesh Pattern**, use **Data->Optimize mesh template** menu to improve the quality of the mesh pattern. 
+After clicking **Mesh Pattern**, use **Data->Optimize mesh template** menu to improve the quality of the mesh pattern.
