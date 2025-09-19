@@ -450,8 +450,8 @@ class MyWindow(QMainWindow):
         self.displayData = rmmesh.comp_func.fft.fixCurvature2D(
             self.displayData[0], self.radius
         )
-        self.fftData = scipy.fft.fft2(self.displayData)
-        self.absFftData = np.log(np.abs(self.fftData) + 1.0)
+        self.fftData = scipy.fft.fftshift(scipy.fft.fft2(self.displayData))
+        self.absFftData = rmmesh.comp_func.fft.fftToAbs(self.fftData)
         self.leftGraphWidget.setImage(self.displayData)
         self.rightGraphWidget.setImage(self.absFftData)
         self.rightFinishButton.setEnabled(True)
@@ -463,8 +463,8 @@ class MyWindow(QMainWindow):
         self.displayData = rmmesh.comp_func.fft.fixCurvature2D(
             self.displayData[0], self.radius
         )
-        self.fftData = scipy.fft.fft2(self.displayData)
-        self.absFftData = np.log(np.abs(self.fftData) + 1.0)
+        self.fftData = scipy.fft.fftshift(scipy.fft.fft2(self.displayData))
+        self.absFftData = rmmesh.comp_func.fft.fftToAbs(self.fftData)
         self.leftGraphWidget.setImage(self.displayData)
         self.rightGraphWidget.setImage(self.absFftData)
         self.rightFinishButton.setEnabled(True)
