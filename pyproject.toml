@@ -5,11 +5,20 @@ description = "Add your description here"
 readme = "README.md"
 authors = [{ name = "Shouzheng Liu", email = "lshzh.hi@gmail.com" }]
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "numba>=0.62.0",
+    "numpy>=1.26.0",
+    "pyqtgraph>=0.13.7",
+    "qtpy>=2.4.3",
+    "scipy>=1.15.0",
+]
 
-# [project.scripts]
-# rmmesh = "rmmesh:main"
+[project.scripts]
+rmmesh = "rmmesh.RmMeshGUI:main"
 
 [build-system]
 requires = ["uv_build>=0.8.18,<0.9.0"]
 build-backend = "uv_build"
+
+[dependency-groups]
+dev = ["pyqt6>=6.9.1"]

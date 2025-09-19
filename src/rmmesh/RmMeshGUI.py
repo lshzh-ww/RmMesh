@@ -1,18 +1,16 @@
-import FileIO.loadData
-import CustomWidgets.plot
-import CompFunc.fft
-from math import log, sqrt,sin,cos,pi,exp,atan,isinf,isnan
+import rmmesh.FileIO.loadData
+import rmmesh.CustomWidgets.plot
+import rmmesh.CompFunc.fft
+import math
 from multiprocessing import Pool,cpu_count
 
 import sys
 import numpy as np
-from math import log,isnan
-import scipy as sp
 import scipy.fft
 import pyqtgraph as pg
-from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QFileDialog, QWidget, QInputDialog, QHBoxLayout, QFrame, QSplitter, QPushButton, QGridLayout, QCheckBox
-from PyQt5.QtGui import QIcon, QPainter, QColor, QFont, QPixmap, QImage
-from PyQt5.QtCore import Qt, QPoint
+from qtpy.QtWidgets import QMainWindow, QAction, QApplication, QFileDialog, QWidget, QInputDialog, QHBoxLayout, QFrame, QSplitter, QPushButton, QGridLayout, QCheckBox
+from qtpy.QtGui import QIcon
+from qtpy.QtCore import Qt
 from pathlib import Path
 from time import time
 
@@ -29,7 +27,7 @@ class MyWindow(QMainWindow):
         #quit 
         exitAct = QAction(QIcon(), '&Exit', self)
         exitAct.setStatusTip('Exit application')
-        exitAct.triggered.connect(qApp.quit)
+        exitAct.triggered.connect(QApplication.instance().quit)
         #load file
         loadFileAct = QAction(QIcon(),'Load...',self)
         loadFileAct.triggered.connect(self.loadFileDiag)
@@ -142,9 +140,9 @@ class MyWindow(QMainWindow):
         self.rightUndoButton.clicked.connect(self.rightRadiusDown)
         self.rightFinishButton.clicked.connect(self.rightFinish)
 
-        self.leftGraphWidget = CustomWidgets.plot.myImageView(topLeft,view=pg.PlotItem())
+        self.leftGraphWidget = rmmesh.CustomWidgets.plot.myImageView(topLeft,view=pg.PlotItem())
         self.leftGraphWidget.show()
-        self.rightGraphWidget = CustomWidgets.plot.myImageView(topRight,view=pg.PlotItem())
+        self.rightGraphWidget = rmmesh.CustomWidgets.plot.myImageView(topRight,view=pg.PlotItem())
         self.rightGraphWidget.show()
         self.leftGraphWidget.linkSlider(self.rightGraphWidget)
         self.rightGraphWidget.linkSlider(self.leftGraphWidget)
@@ -169,14 +167,14 @@ class MyWindow(QMainWindow):
     def loadFileDiag(self):
         home_dir = str(Path.home())
         self.fname = QFileDialog.getOpenFileName(self, 'Open file', home_dir)
-        #self.rawData=FileIO.loadData.loadSpacialScan(self,self.fname[0])
-        self.rawData=FileIO.loadData.loadFile(self,self.fname[0])
+        #self.rawData=rmmesh.FileIO.loadData.loadSpacialScan(self,self.fname[0])
+        self.rawData=rmmesh.FileIO.loadData.loadFile(self,self.fname[0])
         dataShape=np.shape(self.rawData)
         print(dataShape)
         self.displayData=self.rawData.copy()
         self.leftGraphWidget.setImage(self.displayData)
-        self.fftData=CompFunc.fft.dataToFft(self.displayData)
-        self.absFftData=CompFunc.fft.fftToAbs(self.fftData)
+        self.fftData=rmmesh.CompFunc.fft.dataToFft(self.displayData)
+        self.absFftData=rmmesh.CompFunc.fft.fftToAbs(self.fftData)
         self.rightGraphWidget.setImage(self.absFftData)
         self.rawIntensity=np.zeros(np.size(self.rawData,0))
         for i in np.arange(0,np.size(self.rawData,0),1):
@@ -190,8 +188,8 @@ class MyWindow(QMainWindow):
         print(dataShape)
         self.displayData=self.rawData.copy()
         self.leftGraphWidget.setImage(self.displayData)
-        self.fftData=CompFunc.fft.dataToFft(self.displayData)
-        self.absFftData=CompFunc.fft.fftToAbs(self.fftData)
+        self.fftData=rmmesh.CompFunc.fft.dataToFft(self.displayData)
+        self.absFftData=rmmesh.CompFunc.fft.fftToAbs(self.fftData)
         self.rightGraphWidget.setImage(self.absFftData)
         self.rawIntensity=np.zeros(np.size(self.rawData,0))
         for i in np.arange(0,np.size(self.rawData,0),1):
@@ -201,7 +199,7 @@ class MyWindow(QMainWindow):
         home_dir = str(Path.home())
         saveFilename = QFileDialog.getSaveFileName(self, 'Save File', home_dir)
         print(saveFilename)
-        FileIO.loadData.saveFile(self, self.fname[0], saveFilename[0],self.displayData)
+        rmmesh.FileIO.loadData.saveFile(self, self.fname[0], saveFilename[0],self.displayData)
 
     def switchXYFunc(self):
         self.rawData=np.swapaxes(self.rawData,1,2)
@@ -209,8 +207,8 @@ class MyWindow(QMainWindow):
         print(dataShape)
         self.displayData=self.rawData.copy()
         self.leftGraphWidget.setImage(self.displayData)
-        self.fftData=CompFunc.fft.dataToFft(self.displayData)
-        self.absFftData=CompFunc.fft.fftToAbs(self.fftData)
+        self.fftData=rmmesh.CompFunc.fft.dataToFft(self.displayData)
+        self.absFftData=rmmesh.CompFunc.fft.fftToAbs(self.fftData)
         self.rightGraphWidget.setImage(self.absFftData)
         self.rawIntensity=np.zeros(np.size(self.rawData,0))
         for i in np.arange(0,np.size(self.rawData,0),1):
@@ -219,11 +217,11 @@ class MyWindow(QMainWindow):
     def restoreCurvatureFunc(self):
         self.restoredData=np.zeros(np.shape(self.rawData))
         for i in np.arange(0,np.size(self.displayData,0),1):
-            self.restoredData[i]=CompFunc.fft.restoreCurvature2D(self.displayData[i],self.radius)
+            self.restoredData[i]=rmmesh.CompFunc.fft.restoreCurvature2D(self.displayData[i],self.radius)
         self.displayData=self.restoredData
         self.leftGraphWidget.setImage(self.displayData)
         self.finalMesh=np.zeros(np.shape(self.meshPattern))
-        self.finalMesh[0]=CompFunc.fft.restoreCurvature2D(self.meshPattern[0],self.radius)
+        self.finalMesh[0]=rmmesh.CompFunc.fft.restoreCurvature2D(self.meshPattern[0],self.radius)
 
 
 
@@ -242,17 +240,17 @@ class MyWindow(QMainWindow):
                         for index_2 in range(np.size(self.rawData,2)):
                             if self.rawData[i,index_1,index_2]<0:
                                 self.rawData[i,index_1,index_2]=0
-                if isnan(np.sum(self.rawData[i])):
+                if math.isnan(np.sum(self.rawData[i])):
                     print('image ' + str(i+1)+" contains NaN.")
                     for index_1 in range(np.size(self.rawData,1)):
                         for index_2 in range(np.size(self.rawData,2)):
-                            if isnan(self.rawData[i,index_1,index_2]):
+                            if math.isnan(self.rawData[i,index_1,index_2]):
                                 self.rawData[i,index_1,index_2]=0
                 self.avgRawData[0] = self.avgRawData[0] + self.rawData[i]
             self.avgRawData = self.avgRawData/np.size(self.rawData,0)
             self.leftGraphWidget.setImage(self.avgRawData)
-            self.fftData=CompFunc.fft.dataToFft(self.avgRawData)
-            self.absFftData=CompFunc.fft.fftToAbs(self.fftData)
+            self.fftData=rmmesh.CompFunc.fft.dataToFft(self.avgRawData)
+            self.absFftData=rmmesh.CompFunc.fft.fftToAbs(self.fftData)
             self.rightGraphWidget.setImage(self.absFftData)
             self.rightGraphWidget.view.getViewBox().setMouseMode(pg.ViewBox.RectMode)
             print(self.rightGraphWidget.view.getViewBox().viewRange())
@@ -262,28 +260,28 @@ class MyWindow(QMainWindow):
             CPU_NUM=cpu_count()
             self.displayData=np.zeros((self.displayData.shape))
             for image_index in range(len(self.rawData)):
-                newImage=CompFunc.fft.autoRemoveFourierPeaks(self.rawData[image_index])
-                #newImage=CompFunc.fft.autoRemoveFourierPeaks(newImage)
-                self.meshPattern=CompFunc.fft.getRatio(self.rawData[image_index:image_index+1,:,:],np.reshape(newImage,(1,len(newImage),len(newImage[0]))))
+                newImage=rmmesh.CompFunc.fft.autoRemoveFourierPeaks(self.rawData[image_index])
+                #newImage=rmmesh.CompFunc.fft.autoRemoveFourierPeaks(newImage)
+                self.meshPattern=rmmesh.CompFunc.fft.getRatio(self.rawData[image_index:image_index+1,:,:],np.reshape(newImage,(1,len(newImage),len(newImage[0]))))
                 
                 M=int(len(self.meshPattern[0])*4//blockSize)
                 N=int(len(self.meshPattern[0][0])*4//blockSize)
                 print(str(M)+'by'+str(N))
 
-                self.smallImageArray=CompFunc.fft.splitLargeImage(self.meshPattern[0],M,N,blockSize)
-                self.avgScanImageArray=CompFunc.fft.splitLargeImage(self.rawData[image_index],M,N,blockSize)
+                self.smallImageArray=rmmesh.CompFunc.fft.splitLargeImage(self.meshPattern[0],M,N,blockSize)
+                self.avgScanImageArray=rmmesh.CompFunc.fft.splitLargeImage(self.rawData[image_index],M,N,blockSize)
                 self.optimizedMeshArray=np.zeros(self.smallImageArray.shape)
                 self.optimizedMeshLoss=np.zeros(M*N)
                 if __name__ == '__main__':
                     with Pool(processes=CPU_NUM) as pool:
                         index=0
                         while (index+CPU_NUM)<M*N:
-                            m_Results=[pool.apply_async(CompFunc.fft.optimizeMeshFromData,args=(self.smallImageArray[i],self.avgScanImageArray[i],)) for i in range(index,index+CPU_NUM)]
+                            m_Results=[pool.apply_async(rmmesh.CompFunc.fft.optimizeMeshFromData,args=(self.smallImageArray[i],self.avgScanImageArray[i],)) for i in range(index,index+CPU_NUM)]
                             for i in range(CPU_NUM):
                                 self.optimizedMeshArray[index+i],self.optimizedMeshLoss[index+i]=m_Results[i].get()
                                 print(str(index+i+1)+'/'+str(M*N))
                             index+=CPU_NUM
-                        m_Results=[pool.apply_async(CompFunc.fft.optimizeMeshFromData,args=(self.smallImageArray[i],self.avgScanImageArray[i],)) for i in range(index,M*N)]
+                        m_Results=[pool.apply_async(rmmesh.CompFunc.fft.optimizeMeshFromData,args=(self.smallImageArray[i],self.avgScanImageArray[i],)) for i in range(index,M*N)]
                         for i in range(len(m_Results)):
                             self.optimizedMeshArray[index+i],self.optimizedMeshLoss[index+i]=m_Results[i].get()
                             print(str(index+i+1)+'/'+str(M*N))
@@ -293,13 +291,13 @@ class MyWindow(QMainWindow):
                     pool.join()
 
 
-                self.meshPattern[0]=CompFunc.fft.constructLargeImage(self.optimizedMeshArray,1./self.optimizedMeshLoss,M,N,blockSize,len(self.rawData[0]),len(self.rawData[0][0]))
+                self.meshPattern[0]=rmmesh.CompFunc.fft.constructLargeImage(self.optimizedMeshArray,1./self.optimizedMeshLoss,M,N,blockSize,len(self.rawData[0]),len(self.rawData[0][0]))
                 self.displayData[image_index]=self.meshPattern[0]*self.rawData[image_index]
             print(time()-timeStart)
 
             self.leftGraphWidget.setImage(self.displayData)
-            self.fftData=CompFunc.fft.dataToFft(self.displayData)
-            self.absFftData=CompFunc.fft.fftToAbs(self.fftData)
+            self.fftData=rmmesh.CompFunc.fft.dataToFft(self.displayData)
+            self.absFftData=rmmesh.CompFunc.fft.fftToAbs(self.fftData)
             self.rightGraphWidget.setImage(self.absFftData)
             return 0
 
@@ -309,17 +307,17 @@ class MyWindow(QMainWindow):
         region=self.rightGraphWidget.view.getViewBox().viewRange()
         self.selectedRegion.append(region)
         print(self.selectedRegion[len(self.selectedRegion)-1])
-        CompFunc.fft.maskFftData(self.fftData,region)
-        self.absFftData=CompFunc.fft.fftToAbs(self.fftData)
+        rmmesh.CompFunc.fft.maskFftData(self.fftData,region)
+        self.absFftData=rmmesh.CompFunc.fft.fftToAbs(self.fftData)
         self.rightGraphWidget.setImage(self.absFftData)
-        self.displayData=CompFunc.fft.fftToData(self.fftData,self.rawIntensity)
+        self.displayData=rmmesh.CompFunc.fft.fftToData(self.fftData,self.rawIntensity)
 
         self.leftGraphWidget.setImage(self.displayData)
         self.leftMeshPattern.setEnabled(True)
 
     def leftShowMesh(self):
         if self.leftDisplay=='ReconstructData':
-            self.meshPattern=CompFunc.fft.getRatio(self.avgRawData,self.displayData)
+            self.meshPattern=rmmesh.CompFunc.fft.getRatio(self.avgRawData,self.displayData)
             self.leftGraphWidget.setImage(self.meshPattern)
             self.leftGraphWidget.setLevels(min=0,max=3.)
             self.leftDisplay='MeshPattern'
@@ -331,12 +329,12 @@ class MyWindow(QMainWindow):
 
     def leftUndoFunc(self):
         self.selectedRegion=self.selectedRegion[:len(self.selectedRegion)-1]
-        self.fftData=CompFunc.fft.dataToFft(self.avgRawData)
+        self.fftData=rmmesh.CompFunc.fft.dataToFft(self.avgRawData)
         for i in np.arange(0,len(self.selectedRegion),1):
-            CompFunc.fft.maskFftData(self.fftData,self.selectedRegion[i])
-        self.absFftData=CompFunc.fft.fftToAbs(self.fftData)
+            rmmesh.CompFunc.fft.maskFftData(self.fftData,self.selectedRegion[i])
+        self.absFftData=rmmesh.CompFunc.fft.fftToAbs(self.fftData)
         self.rightGraphWidget.setImage(self.absFftData)
-        self.displayData=CompFunc.fft.fftToData(self.fftData,self.rawIntensity)
+        self.displayData=rmmesh.CompFunc.fft.fftToData(self.fftData,self.rawIntensity)
         self.leftGraphWidget.setImage(self.displayData)
         self.leftDisplay='ReconstructData'
 
@@ -350,8 +348,8 @@ class MyWindow(QMainWindow):
             self.displayData[i] = self.displayData[i]*self.sumRatio
         self.leftGraphWidget.setImage(self.displayData)
         self.leftDisplay='ReconstructData'
-        self.fftData=CompFunc.fft.dataToFft(self.displayData)
-        self.absFftData=CompFunc.fft.fftToAbs(self.fftData)
+        self.fftData=rmmesh.CompFunc.fft.dataToFft(self.displayData)
+        self.absFftData=rmmesh.CompFunc.fft.fftToAbs(self.fftData)
         self.rightGraphWidget.setImage(self.absFftData)
         self.leftSelectPeakButton.setEnabled(False)
         self.leftUndoButton.setEnabled(False)
@@ -369,15 +367,15 @@ class MyWindow(QMainWindow):
         region=self.rightGraphWidget.view.getViewBox().viewRange()
         self.selectedRegion.append(region)
         print(self.selectedRegion[len(self.selectedRegion)-1])
-        CompFunc.fft.drawRect(self.absFftData,region)
+        rmmesh.CompFunc.fft.drawRect(self.absFftData,region)
         self.rightGraphWidget.setImage(self.absFftData)
         self.rightFinishButton.setEnabled(True)
 
     def rightUndoFunc(self):
         self.selectedRegion=self.selectedRegion[:len(self.selectedRegion)-1]
-        self.absFftData=CompFunc.fft.fftToAbs(self.fftData)
+        self.absFftData=rmmesh.CompFunc.fft.fftToAbs(self.fftData)
         for i in np.arange(0,len(self.selectedRegion),1):
-            CompFunc.fft.drawRect(self.absFftData,self.selectedRegion[i])
+            rmmesh.CompFunc.fft.drawRect(self.absFftData,self.selectedRegion[i])
         self.rightGraphWidget.setImage(self.absFftData)
     
 
@@ -385,8 +383,8 @@ class MyWindow(QMainWindow):
         self.radius = self.radius + 100
         print('radius=',self.radius)
         self.displayData=self.rawData.copy()
-        self.displayData=CompFunc.fft.fixCurvature2D(self.displayData[0],self.radius)
-        self.fftData=sp.fft.fft2(self.displayData)
+        self.displayData=rmmesh.CompFunc.fft.fixCurvature2D(self.displayData[0],self.radius)
+        self.fftData=scipy.fft.fft2(self.displayData)
         self.absFftData=np.log(np.abs(self.fftData)+1.)
         self.leftGraphWidget.setImage(self.displayData)
         self.rightGraphWidget.setImage(self.absFftData)
@@ -396,8 +394,8 @@ class MyWindow(QMainWindow):
         self.radius = self.radius - 100
         print('radius=',self.radius)
         self.displayData=self.rawData.copy()
-        self.displayData=CompFunc.fft.fixCurvature2D(self.displayData[0],self.radius)
-        self.fftData=sp.fft.fft2(self.displayData)
+        self.displayData=rmmesh.CompFunc.fft.fixCurvature2D(self.displayData[0],self.radius)
+        self.fftData=scipy.fft.fft2(self.displayData)
         self.absFftData=np.log(np.abs(self.fftData)+1.)
         self.leftGraphWidget.setImage(self.displayData)
         self.rightGraphWidget.setImage(self.absFftData)
@@ -406,12 +404,12 @@ class MyWindow(QMainWindow):
     def rightFinish(self):
         self.fixedData=np.zeros(np.shape(self.rawData))
         for i in np.arange(0,np.size(self.rawData,0),1):
-            self.fixedData[i]=CompFunc.fft.fixCurvature2D(self.rawData[i],self.radius)
+            self.fixedData[i]=rmmesh.CompFunc.fft.fixCurvature2D(self.rawData[i],self.radius)
         self.rawData=self.fixedData
         self.displayData=self.rawData.copy()
         self.leftGraphWidget.setImage(self.displayData)
-        self.fftData=CompFunc.fft.dataToFft(self.displayData)
-        self.absFftData=CompFunc.fft.fftToAbs(self.fftData)
+        self.fftData=rmmesh.CompFunc.fft.dataToFft(self.displayData)
+        self.absFftData=rmmesh.CompFunc.fft.fftToAbs(self.fftData)
         print(np.shape(self.absFftData))
         self.rightGraphWidget.setImage(self.absFftData)
         self.rightSelectPeakButton.setEnabled(False)
@@ -424,8 +422,8 @@ class MyWindow(QMainWindow):
             self.avgRawData[0] = self.avgRawData[0] + self.rawData[i]
         self.avgRawData = self.avgRawData/np.size(self.rawData,0)
         self.leftGraphWidget.setImage(self.avgRawData)
-        self.fftData=CompFunc.fft.dataToFft(self.avgRawData)
-        self.absFftData=CompFunc.fft.fftToAbs(self.fftData)
+        self.fftData=rmmesh.CompFunc.fft.dataToFft(self.avgRawData)
+        self.absFftData=rmmesh.CompFunc.fft.fftToAbs(self.fftData)
         self.rightGraphWidget.setImage(self.absFftData)
 
     def testFunc(self):
@@ -439,20 +437,20 @@ class MyWindow(QMainWindow):
         print(str(M)+'by'+str(N))
 
         self.displayData=np.zeros((self.displayData.shape))
-        self.smallImageArray=CompFunc.fft.splitLargeImage(self.meshPattern[0],M,N,blockSize)
-        self.avgScanImageArray=CompFunc.fft.splitLargeImage(self.avgRawData[0],M,N,blockSize)
+        self.smallImageArray=rmmesh.CompFunc.fft.splitLargeImage(self.meshPattern[0],M,N,blockSize)
+        self.avgScanImageArray=rmmesh.CompFunc.fft.splitLargeImage(self.avgRawData[0],M,N,blockSize)
         self.optimizedMeshArray=np.zeros(self.smallImageArray.shape)
         self.optimizedMeshLoss=np.zeros(M*N)
 
         with Pool(processes=CPU_NUM) as pool:
             index=0
             while (index+CPU_NUM)<M*N:
-                m_Results=[pool.apply_async(CompFunc.fft.optimizeMeshFromData,args=(self.smallImageArray[i],self.avgScanImageArray[i],)) for i in range(index,index+CPU_NUM)]
+                m_Results=[pool.apply_async(rmmesh.CompFunc.fft.optimizeMeshFromData,args=(self.smallImageArray[i],self.avgScanImageArray[i],)) for i in range(index,index+CPU_NUM)]
                 for i in range(CPU_NUM):
                     self.optimizedMeshArray[index+i],self.optimizedMeshLoss[index+i]=m_Results[i].get()
                     print(str(index+i+1)+'/'+str(M*N))
                 index+=CPU_NUM
-            m_Results=[pool.apply_async(CompFunc.fft.optimizeMeshFromData,args=(self.smallImageArray[i],self.avgScanImageArray[i],)) for i in range(index,M*N)]
+            m_Results=[pool.apply_async(rmmesh.CompFunc.fft.optimizeMeshFromData,args=(self.smallImageArray[i],self.avgScanImageArray[i],)) for i in range(index,M*N)]
             for i in range(len(m_Results)):
                 self.optimizedMeshArray[index+i],self.optimizedMeshLoss[index+i]=m_Results[i].get()
                 print(str(index+i+1)+'/'+str(M*N))
@@ -462,7 +460,7 @@ class MyWindow(QMainWindow):
         pool.join()
 
 
-        self.meshPattern[0]=CompFunc.fft.constructLargeImage(self.optimizedMeshArray,1./self.optimizedMeshLoss,M,N,blockSize,len(self.rawData[0]),len(self.rawData[0][0]))
+        self.meshPattern[0]=rmmesh.CompFunc.fft.constructLargeImage(self.optimizedMeshArray,1./self.optimizedMeshLoss,M,N,blockSize,len(self.rawData[0]),len(self.rawData[0][0]))
         self.displayData=self.meshPattern
         
         self.leftGraphWidget.setImage(self.displayData)

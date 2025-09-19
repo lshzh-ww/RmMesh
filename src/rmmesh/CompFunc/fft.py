@@ -1,7 +1,6 @@
 import numpy as np
-from math import log, sqrt,sin,cos,pi,exp,atan,isinf,isnan
+from math import sqrt,sin,cos,pi,isinf,isnan
 import scipy.fft
-#import scipy.fft.fft2
 from numba import jit
 
 

@@ -1,7 +1,6 @@
-from matplotlib.pyplot import sci
 import scipy.io
 import numpy as np
-from PyQt5.QtWidgets import QInputDialog
+from qtpy.QtWidgets import QInputDialog
 
 def matFile(self,filename):
     data=scipy.io.loadmat(filename)

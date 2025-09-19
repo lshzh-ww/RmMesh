@@ -1,5 +1,4 @@
 import pyqtgraph as pg
-from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QFileDialog, QWidget, QInputDialog, QHBoxLayout, QFrame, QSplitter
 
 
 class myImageView(pg.ImageView):
