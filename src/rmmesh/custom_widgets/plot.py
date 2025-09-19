@@ -18,7 +18,7 @@ class myImageView(pg.ImageView):
         self.link = anaImageView
 
     def timeLineChanged(self):
-        if not self.ignorePlaying:
+        if not self.ignoreTimeLine:
             self.play(0)
 
         (ind, time) = self.timeIndex(self.timeLine)
