@@ -2,14 +2,20 @@ import pyqtgraph as pg
 
 
 class myImageView(pg.ImageView):
-    
-    def __init__(self, parent=None, name="ImageView", view=None, imageItem=None, levelMode='mono', *args):
+    def __init__(
+        self,
+        parent=None,
+        name="ImageView",
+        view=None,
+        imageItem=None,
+        levelMode="mono",
+        *args,
+    ):
         super().__init__(parent, name, view, imageItem, levelMode, *args)
-        self.link=None
+        self.link = None
 
-
-    def linkSlider(self,anaImageView):
-        self.link=anaImageView
+    def linkSlider(self, anaImageView):
+        self.link = anaImageView
 
     def timeLineChanged(self):
         if not self.ignorePlaying:
@@ -22,6 +28,3 @@ class myImageView(pg.ImageView):
             if self.link is not None:
                 self.link.setCurrentIndex(ind)
         self.sigTimeChanged.emit(ind, time)
-
-
-
