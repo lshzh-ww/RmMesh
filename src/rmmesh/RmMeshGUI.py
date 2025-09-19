@@ -8,8 +8,8 @@ import sys
 import numpy as np
 import scipy.fft
 import pyqtgraph as pg
-from qtpy.QtWidgets import QMainWindow, QAction, QApplication, QFileDialog, QWidget, QInputDialog, QHBoxLayout, QFrame, QSplitter, QPushButton, QGridLayout, QCheckBox
-from qtpy.QtGui import QIcon
+from qtpy.QtWidgets import QMainWindow, QApplication, QFileDialog, QWidget, QInputDialog, QHBoxLayout, QFrame, QSplitter, QPushButton, QGridLayout, QCheckBox
+from qtpy.QtGui import QIcon, QAction
 from qtpy.QtCore import Qt
 from pathlib import Path
 from time import time
@@ -70,24 +70,24 @@ class MyWindow(QMainWindow):
         hbox = QHBoxLayout(self.wid)
 
         topLeft = QFrame(self.wid)
-        topLeft.setFrameShape(QFrame.StyledPanel)
+        topLeft.setFrameShape(QFrame.Shape.StyledPanel)
         topRight = QFrame(self.wid)
-        topRight.setFrameShape(QFrame.StyledPanel)
+        topRight.setFrameShape(QFrame.Shape.StyledPanel)
         bottomLeft = QFrame(self.wid)
-        bottomLeft.setFrameShape(QFrame.StyledPanel)
+        bottomLeft.setFrameShape(QFrame.Shape.StyledPanel)
         bottomRight = QFrame(self.wid)
-        bottomRight.setFrameShape(QFrame.StyledPanel)
+        bottomRight.setFrameShape(QFrame.Shape.StyledPanel)
 
-        splitter1 = QSplitter(Qt.Horizontal)
+        splitter1 = QSplitter(Qt.Orientation.Horizontal)
         splitter1.addWidget(topLeft)
         splitter1.addWidget(topRight)
 
-        splitter3 = QSplitter(Qt.Horizontal)
+        splitter3 = QSplitter(Qt.Orientation.Horizontal)
         splitter3.addWidget(bottomLeft)
         splitter3.addWidget(bottomRight)
         splitter3.setSizes([737,738])
 
-        splitter2 = QSplitter(Qt.Vertical)
+        splitter2 = QSplitter(Qt.Orientation.Vertical)
         splitter2.addWidget(splitter1)
         splitter2.addWidget(splitter3)
         splitter2.setSizes([627,173])

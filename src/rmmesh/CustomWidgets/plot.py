@@ -19,7 +19,7 @@ class myImageView(pg.ImageView):
         if ind != self.currentIndex:
             self.currentIndex = ind
             self.updateImage()
-            if self.link!=None:
+            if self.link is not None:
                 self.link.setCurrentIndex(ind)
         self.sigTimeChanged.emit(ind, time)
 
